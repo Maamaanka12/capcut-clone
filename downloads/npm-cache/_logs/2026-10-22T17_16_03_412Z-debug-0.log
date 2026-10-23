@@ -1,0 +1,24 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Users\Abdirahman\AppData\Roaming\npm\node_modules\npm\bin\npm-cli.js
+1 info using npm@12.0.2
+2 info using node@v24.21.0
+3 silly config load:file:C:\Users\Abdirahman\AppData\Roaming\npm\node_modules\npm\npmrc
+4 silly config load:file:C:\Users\Abdirahman\Desktop\RE capcut\.npmrc
+5 silly config load:file:C:\Users\Abdirahman\.npmrc
+6 silly config load:file:C:\Users\Abdirahman\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm exec rea-agents@6.5.0 mcp
+8 verbose argv "exec" "--yes" "--" "rea-agents@6.5.0" "mcp"
+9 verbose logfile logs-max:10 dir:C:\Users\Abdirahman\Desktop\RE capcut\downloads\npm-cache\_logs\2026-10-22T17_16_03_412Z-
+10 verbose logfile C:\Users\Abdirahman\Desktop\RE capcut\downloads\npm-cache\_logs\2026-10-22T17_16_03_412Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+13 http fetch GET 200 https://registry.npmjs.org/rea-agents 2301ms (cache revalidated)
+14 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+15 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+16 notice run npx
+17 notice run rea mcp
+18 verbose cwd C:\Users\Abdirahman\Desktop\RE capcut
+19 verbose os Windows_NT 10.0.26300
+20 verbose node v24.21.0
+21 verbose npm  v12.0.2
+22 verbose exit 0
+23 info ok
