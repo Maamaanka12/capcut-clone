@@ -1,0 +1,25 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Users\Abdirahman\AppData\Roaming\npm\node_modules\npm\bin\npm-cli.js
+1 info using npm@12.0.2
+2 info using node@v24.21.0
+3 silly config load:file:C:\Users\Abdirahman\AppData\Roaming\npm\node_modules\npm\npmrc
+4 silly config load:file:C:\Users\Abdirahman\Desktop\RE capcut\.npmrc
+5 silly config load:file:C:\Users\Abdirahman\.npmrc
+6 silly config load:file:C:\Users\Abdirahman\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm exec rea-agents@6.5.0 search-bytes featureMask C:\Users\Abdirahman\AppData\Local\CapCut\Apps\9.6.0.4097\VECreator.dll --json
+8 verbose argv "exec" "--yes" "--" "rea-agents@6.5.0" "search-bytes" "featureMask" "C:\\Users\\Abdirahman\\AppData\\Local\\CapCut\\Apps\\9.6.0.4097\\VECreator.dll" "--json"
+9 verbose logfile logs-max:10 dir:C:\Users\Abdirahman\Desktop\RE capcut\downloads\npm-cache\_logs\2026-10-23T11_09_53_273Z-
+10 verbose logfile C:\Users\Abdirahman\Desktop\RE capcut\downloads\npm-cache\_logs\2026-10-23T11_09_53_273Z-debug-0.log
+11 silly logfile start cleaning logs, removing 1 files
+12 silly logfile done cleaning log files
+13 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+14 http fetch GET 200 https://registry.npmjs.org/rea-agents 1507ms (cache revalidated)
+15 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+16 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+17 notice run npx
+18 notice run rea search-bytes featureMask C:\Users\Abdirahman\AppData\Local\CapCut\Apps\9.6.0.4097\VECreator.dll --json
+19 verbose cwd C:\Users\Abdirahman\Desktop\RE capcut
+20 verbose os Windows_NT 10.0.26300
+21 verbose node v24.21.0
+22 verbose npm  v12.0.2
+23 verbose exit 1
+24 verbose code 1

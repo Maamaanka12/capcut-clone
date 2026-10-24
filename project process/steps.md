@@ -416,3 +416,160 @@ The next intended action was to have OpenCode read the local skill and inspect t
 **We have finished preparing and verifying the initial reverse-engineering environment. We have not yet reverse-engineered CapCut or started building the clone.**
 
 The next milestone is to open OpenCode inside `RE capcut`, verify the local skill is available to the session, and inspect the available REA tools. Once that is confirmed, we can begin examining CapCut and recording evidence before designing the clone.
+
+---
+
+## 10. Phase 1 — Target Identification & First Evidence (October 23, 2026)
+
+### Step 15: Verify REA MCP tools in session
+
+Confirmed REA MCP server registered in `opencode.json` but **no REA tools available in this session**. `opencode mcp list` reported connected but opencode log showed `server unavailable key=rea type=local status=failed` at 16:46 and 17:16 (30s startup timeout). Used REA CLI fallback via `npx -y rea-agents@6.5.0` with project-local npm cache.
+
+### Step 16: Locate CapCut installation
+
+- Shortcut `CapCut.lnk` in project → `C:\Users\Abdirahman\AppData\Local\CapCut\Apps\CapCut.exe --src1`
+- Registry `HKCU\...\Uninstall\CapCut` → `DisplayVersion=9.6.0.4097`
+- `ProductInfo.xml` → `full_appver=9.6.0.4097`, `cid=capcutpc_0`
+- Install root: `%LOCALAPPDATA%\CapCut\Apps\9.6.0.4097\` (versioned payload)
+- `Apps\CapCut.exe` (4.9 MB) = launcher/stub; `9.6.0.4097\CapCut.exe` (90 KB) = minimal entry point
+
+### Step 17: First static analyses via REA CLI
+
+| Artifact | Operation | Evidence ID |
+|----------|-----------|-------------|
+| `9.6.0.4097\CapCut.exe` | `inspect_pe_resources` | `ev_7ccf1cd...` |
+| `9.6.0.4097\VECreator.dll` | `inspect_pe_resources` | `ev_4bcb266...` |
+| `Apps\CapCut.exe` (launcher) | `inspect_pe_resources` | `ev_7c4c13c...` |
+| `Resources\lumi_js_resources` | `analyze_javascript_application` | `ev_7989114...` |
+| `Resources\lumi_js_resources_video` | `analyze_javascript_application` | `ev_4ae3abe...` |
+| `Resources\lynx_config` | `analyze_javascript_application` | `ev_554cfb...` |
+
+**Key finding:** CapCut is native C++/Qt6 + CEF + Lynx (not Electron). 167 DLLs, 3 `.node` addons, Bun, FFmpeg, OpenVINO.
+
+### Step 18: Save Phase 1 evidence and report
+
+Created `research/phase1-target-identity.md` with Evidence index, architecture confirmation, limitations, and Phase 2 plan.
+
+**Evidence files saved:** `ev_79891145_lumi_js_resources.json`, `ev_4ae3abe4_lumi_js_resources_video.json`, `ev_554cfbe5_lynx_config.json`, `ev_7ccf1cd0f43cdac7df13d008e091d22503d0d1b7eb7decd60394c0aa34ca660a` (PE), `ev_4bcb266ddc83a3f8d3fb6c1982fcea0a3df14638f320c20ba21ab5b4ffe3b6d3` (PE), `ev_7c4c13cabc0ffd29ebfae9daf11b58cdde72416e9040e2613d6b32dd54f64df3` (PE).
+
+---
+
+## 11. Phase 2 — Config, UI, and Native Surface (October 23, 2026)
+
+### Step 19: Copy and inspect CapCut User Data config
+
+Copied `Config\` and `MMKV\settings_json` to `research/appdata/UserData/`. Key findings:
+
+- **Projects\ empty** — no saved drafts/projects; no draft DB to reverse
+- **Config\Shortcut\*.json** — 240+ action→keybinding mappings across 3 presets (Final Cut Pro X, Premiere Pro, Custom1-3). Directly reusable for clone keymap.
+- **getCfg** — 175+ AI features blocked (`veo_3`, `seedance_2.5`, `runway_gen_4`, etc.), `replicate_config.enable=true`
+- **globalSetting** — render paths, hardware encode/decode, Qt6 tuning (`ui_memory_optimize.*`, `qsg_memory_optimize.*`), feature flags
+- **EnvDetect.json** — Intel UHD 620, driver 31.0.101.2121, Qt6 d3d11 hw_render=1
+- **ve_ab_conf.ini** — 115 A/B flags (SVT-AV1, ByteVC1, CUDA, Intel preset, etc.)
+- **ve_hw_check.ini** — Intel UHD 620 + AV1/HEVC/H.264 HW up to 8K
+
+### Step 20: Lynx runtime UI analysis
+
+- Static `lynx_config` (14 pages from Phase 1) + runtime modal bundles in cache
+- Cache location: `User Data\Cache\GeckoCpp\resources\3d692397b923263594be6bf2b778858c\image_lynx_videocutpc_modal\1155441196\res\pages\`
+- `commerce_splash_modal\template.js` (1,035,890 B), `editor_vip_benefit_popup\template.js` (871,182 B) — **binary Lynx bytecode**, not JS source
+- REA `analyze_javascript_application` → `ev_fb1983c...d4dad` (parsed 3 sources, binary blobs opaque)
+- **Missing:** no `editor_video` page in cache (requires app interaction)
+
+### Step 21: Native addon surface
+
+| Addon | Size | SHA-256 | Evidence ID |
+|-------|------|---------|-------------|
+| `videoeditor_addon.node` | 3,689,984 B | `25c89e933a90...` | `ev_76d6034d...` |
+| `agent_runtime_addon.node` | 521,216 B | `82c9a4ab2bd2...` | `ev_0acb321...` |
+| `ttnet_frontier_addon.node` | 132,608 B | `f60f56f75ec9...` | `ev_7c23c1e...` |
+
+All PE32+ native addons (Node.js N-API). Export enumeration needs Ghidra (`open_binary`).
+
+### Step 22: Feature ↔ native correlation (deferred)
+
+REA CLI `search-bytes` bug (parses pattern as file path). MCP `search_strings` unavailable. Correlation of `featureMask`/`featureBlend`/`featureBlit` to `VECreator.dll`/`videoeditor.dll`/`cccreator.dll` deferred.
+
+### Step 23: Save Phase 2 evidence and report
+
+Created `research/phase2-config-and-ui.md` with Evidence index, config findings, Lynx runtime UI, native addon surface, limitations, and Phase 3 gate.
+
+**New Evidence files:**
+- `ev_fb1983ccdf62ea30f938469ac0af8a38aa6a44d04c0420805883cac4781f4dad` (Lynx modal)
+- `ev_76d6034d5770ed28270984908275fbeb08f601001855b56c60c8299bb373bdaa` (videoeditor_addon)
+- `ev_0acb3216e1faeea413b3521fc922d687a9a0666fcd99f0be6d2c6073e9e35cc9` (agent_runtime_addon)
+- `ev_7c23c1eceadb26fbe594ff68e7460a9d33cc37a047c66f9076d45cf6d1af12ae` (ttnet_frontier_addon)
+
+### Step 24: Next-step gate decision
+
+| Option | Action |
+|--------|--------|
+| **A** | Restart opencode → REA MCP tools → `search_strings` on DLLs + `binary_session` |
+| **B** | `rea setup --dry-run` → install Ghidra → `open_binary` on `.node` addons |
+| **C** | User creates throwaway project in CapCut → analyze `Projects\` draft DB |
+| **D** | Proceed to Phase 3 design (clone architecture/docs) with current evidence |
+
+All evidence saved under `research/ev_*.json` and `research/appdata/UserData/`. CapCut installation untouched.
+
+---
+
+## 12. Current Status (Updated)
+
+### Completed
+
+- [x] Established the `RE capcut` workspace.
+- [x] Obtained the REA repository in `tools/rea/`.
+- [x] Confirmed REA version 6.5.0.
+- [x] Added the local `reverse-engineer-anything` skill.
+- [x] Created the project-level `opencode.json`.
+- [x] Configured the npm cache path inside the project.
+- [x] Confirmed REA can initialize using the default npm cache.
+- [x] Confirmed REA can initialize using the project-local npm cache.
+- [x] Confirmed `opencode mcp list` reports `rea connected` (but session tools unavailable).
+- [x] Verified the local skill directory.
+- [x] Chose Option A, the project-local workflow.
+- [x] Established the requirement to leave the original CapCut installation untouched.
+- [x] **Located CapCut installation and verified version 9.6.0.4097.**
+- [x] **Ran 6 Phase 1 REA analyses (PE resources + JS bundles).**
+- [x] **Copied and inspected CapCut User Data config (Config\, MMKV).**
+- [x] **Analyzed Lynx runtime UI bundles from cache.**
+- [x] **Inspected 3 native .node addons via inspect_artifact.**
+- [x] Saved all Evidence to `research/ev_*.json`.
+- [x] Wrote `research/phase1-target-identity.md` and `research/phase2-config-and-ui.md`.
+
+### Not yet completed
+
+- [ ] Restore REA MCP tools in session (restart opencode or install Ghidra).
+- [ ] Enumerate native exports from `.node` addons (needs Ghidra).
+- [ ] Correlate JS feature names to native DLL symbols.
+- [ ] User creates throwaway project in CapCut to materialize draft DB.
+- [ ] Finalize product requirements, technical requirements, application-flow documents in `docs/`.
+- [ ] Implement the CapCut-inspired editor in `capcut-clone/`.
+- [ ] Test the clone and compare behavior against documented requirements.
+
+---
+
+## 13. Rules for the remaining work (unchanged)
+
+1. Keep project-generated files and research inside `RE capcut`.
+2. Use the existing OpenCode, Node.js, npm, and Windows environment.
+3. Avoid global installations and user-level configuration changes unless necessary and approved.
+4. Keep the original CapCut installation untouched.
+5. Before using tools that require files or configuration outside the project, explain what is needed and why.
+6. Record actual findings separately from hypotheses.
+7. Do not claim that a feature or internal implementation has been discovered without supporting evidence.
+8. Build the clone as a separate application.
+
+---
+
+## Final summary
+
+**Phase 1 complete:** CapCut 9.6.0.4097 identified and analyzed. Architecture confirmed: native C++/Qt6 + CEF + Lynx (not Electron). 6 Evidence records from static analysis.
+
+**Phase 2 complete:** Config/shortcut model extracted (240+ keybindings), A/B flags and HW caps documented, Lynx runtime UI analyzed (binary bytecode), 3 native `.node` addons inventoried. 4 new Evidence records.
+
+**Blockers:** REA MCP server failed in session (30s timeout); Lynx bundles are binary bytecode; no Ghidra for native exports; `Projects\` empty (no draft DB).
+
+**Evidence:** 10 Evidence files under `research/ev_*.json` + reports `phase1-target-identity.md`, `phase2-config-and-ui.md`. Config copies in `research/appdata/UserData/`.
+
+**Next milestone:** Restore REA MCP tools (restart opencode) OR install Ghidra for native export enumeration OR proceed to Phase 3 design with current evidence.
